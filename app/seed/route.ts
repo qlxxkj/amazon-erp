@@ -5,6 +5,7 @@ import bcrypt from 'bcrypt';
 import type { Database } from '../../app/lib/supabase-types'; // 确保路径正确
 import { config } from 'dotenv';
 
+
 // 明确指定从 .env.local 文件加载环境变量
 config({ path: '.env.local' });
 
