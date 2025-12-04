@@ -30,7 +30,6 @@ export default function ImageGalleryWithActions({ initialImages, listingId }: Im
             // 注意：这里可以根据需要调用一个API来通知服务器从图床或记录中删除该图片。
             // 例如：await fetch(`/api/listings/${listingId}/images`, { method: 'DELETE', body: JSON.stringify({url: imageUrlToDelete}) });
             // 由于您的图床API可能不支持删除，此步骤可选。
-
             // 首先在前端UI中立即移除图片，提升用户体验
             const newImages = images.filter((_, index) => index !== indexToDelete);
             setImages(newImages);
