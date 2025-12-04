@@ -64,7 +64,11 @@ export default function ImageGalleryWithActions({ initialImages, listingId }: Im
         return (
             <div className="text-center p-8 border-2 border-dashed border-gray-300 rounded-lg">
                 <p className="text-gray-500">暂无图片</p>
-                <ImageUploader onUploadSuccess={handleUploadSuccess} />
+                <ImageUploader
+                    listingId={listingId}
+                    targetField="other_images" // 添加这行
+                    onUploadSuccess={handleUploadSuccess}
+                />
             </div>
         );
     }
@@ -123,7 +127,11 @@ export default function ImageGalleryWithActions({ initialImages, listingId }: Im
 
                 {/* 上传组件 - 作为一个特殊的“图片”项嵌入列表 */}
                 <div className="flex-shrink-0">
-                    <ImageUploader onUploadSuccess={handleUploadSuccess} />
+                    <ImageUploader
+                        listingId={listingId}
+                        targetField="other_images" // 添加这行
+                        onUploadSuccess={handleUploadSuccess}
+                    />
                 </div>
             </div>
         </div>
