@@ -17,7 +17,7 @@ export async function POST(request: NextRequest) {
         const telegraphFormData = new FormData();
         telegraphFormData.append('file', file);
 
-        const response = await fetch('https://telegra.ph/upload', {
+        const response = await fetch('https://img.hmstu.eu.org/upload', {
             method: 'POST',
             body: telegraphFormData,
         });
