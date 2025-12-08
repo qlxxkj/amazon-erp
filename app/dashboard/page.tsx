@@ -2,13 +2,24 @@ import { Card } from '@/app/ui/dashboard/cards';
 import RevenueChart from '@/app/ui/dashboard/revenue-chart';
 import LatestInvoices from '@/app/ui/dashboard/latest-invoices';
 import { lusitana } from '@/app/ui/fonts';
+// import { getCurrentUser } from '@/app/lib/auth';
+import { redirect } from 'next/navigation';
+import { createServerSupabaseClient as createServerClient } from '@/utils/supabase/server';
 
 export default async function Page() {
+    const supabase = await createServerClient();
+    const {data: {user},} = await supabase.auth.getUser();
+    if (!user) {
+        redirect('/login');
+    }
     return (
         <main>
             <h1 className={`${lusitana.className} mb-4 text-xl md:text-2xl`}>
                 Dashboard
             </h1>
+            <p>User ID: {user.id}</p>
+            <p>Email: {user.email}</p>
+
             <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
                 {/* <Card title="Collected" value={totalPaidInvoices} type="collected" /> */}
                 {/* <Card title="Pending" value={totalPendingInvoices} type="pending" /> */}

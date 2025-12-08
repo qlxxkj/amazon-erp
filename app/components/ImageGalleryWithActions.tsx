@@ -2,7 +2,7 @@
 'use client';
 
 import { useState } from 'react';
-import Image from 'next/image';
+// import Image from 'next/image';
 import ImageUploader from './ImageUploader'; // 我们将创建这个上传组件
 
 interface ImageGalleryWithActionsProps {
@@ -80,12 +80,12 @@ export default function ImageGalleryWithActions({ initialImages, listingId }: Im
                     className="relative w-full h-96 bg-gray-100 rounded-lg mx-auto cursor-pointer flex items-center justify-center"
                     onClick={() => window.open(images[selectedImageIndex], '_blank')}
                 >
-                    <Image
+                    <img
                         src={images[selectedImageIndex]}
                         alt={`主图 ${selectedImageIndex + 1}`}
-                        fill
+                        // fill
                         style={{ objectFit: 'contain' }}
-                        className="p-2"
+                        className="max-h-96 max-w-full object-contain mx-auto p-2"
                         sizes="(max-width: 768px) 100vw, 80vw"
                     />
                 </div>
@@ -104,12 +104,12 @@ export default function ImageGalleryWithActions({ initialImages, listingId }: Im
                                 }`}
                             onClick={() => setSelectedImageIndex(index)}
                         >
-                            <Image
+                            <img
                                 src={imgUrl}
                                 alt={`缩略图 ${index + 1}`}
-                                fill
-                                style={{ objectFit: 'cover' }}
-                                className="rounded"
+                                // fill
+                                // style={{ objectFit: 'cover' }}
+                                className="h-full w-full object-cover rounded"
                                 sizes="5rem"
                             />
                         </div>

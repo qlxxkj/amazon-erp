@@ -2,20 +2,20 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-import { listingService } from '../../api/listings';
+import { listingService } from '@/app/api/listings';
 
 interface ActionButtonsProps {
-    currentId: number;
+    listingId: number;
 }
 
-export default function ActionButtons({ currentId }: ActionButtonsProps) {
+export default function ActionButtons({ listingId }: ActionButtonsProps) {
     const router = useRouter();
 
     const handleNext = async () => {
         // 获取下一个条目的ID（这里需要您根据业务逻辑实现）
         try {
             const allListings = await listingService.getListings(); // 需要实现这个函数
-            const currentIndex = allListings.findIndex(item => item.id === currentId);
+            const currentIndex = allListings.findIndex(item => item.id === listingId);
             const nextItem = allListings[currentIndex + 1];
 
             if (nextItem) {

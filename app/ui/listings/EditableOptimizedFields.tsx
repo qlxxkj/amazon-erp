@@ -24,11 +24,25 @@ export default function EditableOptimizedFields({
     const handleSave = async () => {
         setIsSaving(true);
         try {
-            await listingService.updateListingOptimized(listingId, editableData);
+            const res = await fetch(`/api/listings/${listingId}`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ optimized: editableData }),
+            });
+
+            const payload = await res.json();
+            if (!res.ok) {
+                throw new Error(payload?.error || '保存失败');
+            }
+
             alert('优化信息保存成功！');
-        } catch (error) {
+            // 可选：刷新页面或更新局部 state 根据返回的 payload.data
+            // router.refresh() 或 setEditableData(payload.data[0].optimized)
+        } catch (error: any) {
             console.error('保存失败:', error);
-            alert('保存失败，请重试。');
+            alert(error.message || '保存失败，请重试。');
         } finally {
             setIsSaving(false);
         }

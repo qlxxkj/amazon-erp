@@ -1,128 +1,126 @@
 // app/api/update-listing-image/route.ts
-import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
-
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
-const supabase = createClient(supabaseUrl, supabaseKey);
+import { NextRequest, NextResponse } from "next/server";
+import { createServerSupabaseClient } from "@/utils/supabase/server";
 
 export async function POST(request: NextRequest) {
     try {
-        const { listingId, newImageUrl, targetField = 'other_images' } = await request.json();
+        const supabase = await createServerSupabaseClient();
 
-        if (!listingId || !newImageUrl) {
-            return NextResponse.json(
-                { success: false, error: '缺少必要参数: listingId 或 newImageUrl' },
-                { status: 400 }
-            );
-        }
+        // 直接从 Supabase Auth 获取当前用户
+        const {
+            data: { user },
+            error: userError,
+        } = await supabase.auth.getUser();
 
-        // 获取当前数据
-        const { data: currentListing, error: fetchError } = await supabase
-            .from('listings')
-            .select('cleaned')
-            .eq('id', listingId)
+        if (userError || !user)
+            return NextResponse.json({ success: false, error: "未认证" }, { status: 401 });
+
+        const userId = user.id;
+
+        const { listingId, newImageUrl, targetField = "other_images" } =
+            await request.json();
+
+        if (!listingId || !newImageUrl)
+            return NextResponse.json({ success: false, error: "缺少参数" }, { status: 400 });
+
+        const { data: listing, error: fetchError } = await supabase
+            .from("listings")
+            .select("cleaned, user_id")
+            .eq("id", listingId)
             .single();
 
-        if (fetchError) {
-            throw new Error(`获取数据失败: ${fetchError.message}`);
-        }
+        if (fetchError) throw fetchError;
 
-        const currentCleaned = currentListing?.cleaned || {};
+        if (listing.user_id !== userId)
+            return NextResponse.json({ success: false, error: "无权限" }, { status: 403 });
+
+        const currentCleaned = listing.cleaned || {};
         let updatedCleaned;
 
-        if (targetField === 'main_image') {
-            // 更新主图
+        if (targetField === "main_image") {
             updatedCleaned = { ...currentCleaned, main_image: newImageUrl };
         } else {
-            // 添加到其他图片数组
             const currentOtherImages = currentCleaned.other_images || [];
             updatedCleaned = {
                 ...currentCleaned,
-                other_images: [...currentOtherImages, newImageUrl]
+                other_images: [...currentOtherImages, newImageUrl],
             };
         }
 
-        // 执行更新
         const { data, error: updateError } = await supabase
-            .from('listings')
+            .from("listings")
             .update({
                 cleaned: updatedCleaned,
-                updated_at: new Date().toISOString()
+                updated_at: new Date().toISOString(),
             })
-            .eq('id', listingId)
+            .eq("id", listingId)
             .select();
 
-        if (updateError) {
-            throw new Error(`更新失败: ${updateError.message}`);
-        }
+        if (updateError) throw updateError;
 
-        return NextResponse.json({
-            success: true,
-            message: '图片URL更新成功',
-            data
-        });
-
-    } catch (error) {
-        console.error('Database update error:', error);
+        return NextResponse.json({ success: true, data });
+    } catch (error: any) {
         return NextResponse.json(
-            {
-                success: false,
-                error: error instanceof Error ? error.message : '数据库更新失败'
-            },
+            { success: false, error: error?.message || "失败" },
             { status: 500 }
         );
     }
 }
 
-// 删除图片的API
 export async function DELETE(request: NextRequest) {
     try {
-        const { listingId, imageUrlToRemove, targetField = 'other_images' } = await request.json();
+        const supabase = await createServerSupabaseClient();
 
-        if (!listingId || !imageUrlToRemove) {
-            return NextResponse.json(
-                { success: false, error: '缺少必要参数' },
-                { status: 400 }
-            );
-        }
+        const {
+            data: { user },
+        } = await supabase.auth.getUser();
 
-        const { data: currentListing, error: fetchError } = await supabase
-            .from('listings')
-            .select('cleaned')
-            .eq('id', listingId)
+        if (!user)
+            return NextResponse.json({ success: false, error: "未认证" }, { status: 401 });
+
+        const userId = user.id;
+
+        const { listingId, imageUrlToRemove, targetField = "other_images" } =
+            await request.json();
+
+        if (!listingId || !imageUrlToRemove)
+            return NextResponse.json({ success: false, error: "缺少参数" }, { status: 400 });
+
+        const { data: listing, error: fetchError } = await supabase
+            .from("listings")
+            .select("cleaned, user_id")
+            .eq("id", listingId)
             .single();
 
         if (fetchError) throw fetchError;
 
-        const currentCleaned = currentListing?.cleaned || {};
+        if (listing.user_id !== userId)
+            return NextResponse.json({ success: false, error: "无权限" }, { status: 403 });
+
+        const currentCleaned = listing.cleaned || {};
         let updatedCleaned;
 
-        if (targetField === 'main_image') {
-            // 如果是主图，清空主图字段
+        if (targetField === "main_image") {
             updatedCleaned = { ...currentCleaned, main_image: null };
         } else {
-            // 从other_images数组中移除指定图片
             const currentOtherImages = currentCleaned.other_images || [];
             updatedCleaned = {
                 ...currentCleaned,
-                other_images: currentOtherImages.filter((url: string) => url !== imageUrlToRemove)
+                other_images: currentOtherImages.filter((u: string) => u !== imageUrlToRemove),
             };
         }
 
         const { error: updateError } = await supabase
-            .from('listings')
+            .from("listings")
             .update({ cleaned: updatedCleaned })
-            .eq('id', listingId);
+            .eq("id", listingId);
 
         if (updateError) throw updateError;
 
-        return NextResponse.json({ success: true, message: '图片删除成功' });
-
-    } catch (error) {
-        console.error('Delete image error:', error);
+        return NextResponse.json({ success: true });
+    } catch (err: any) {
         return NextResponse.json(
-            { success: false, error: '删除失败' },
+            { success: false, error: err.message || "失败" },
             { status: 500 }
         );
     }

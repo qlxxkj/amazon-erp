@@ -1,33 +1,11 @@
-// src/app/listings/page.tsx
+// /app/dashboard/listings/page.tsx
 import Link from 'next/link'
-import { listingService } from '../../api/listings'
-
-// 定义列表项的类型，根据查询的字段确定
-type ListingForList = {
-    id: number
-    cleaned: {
-        asin: string
-        title: string
-        price: number
-        category: string
-        main_image: string
-        item_height: number
-        item_length: number
-        item_width: number
-        item_weight: number
-    }
-}
+import { listingService } from "@/app/api/listings/service";
 
 
 export default async function ListingsPage() {
     // 在服务端获取数据
-    let listings: ListingForList[] = []
-    try {
-        listings = await listingService.getListings()
-    } catch (error) {
-        console.error('Failed to fetch listings:', error)
-        // 可以返回错误页面或状态
-    }
+    const listings = await listingService.getListings();
 
     return (
         <div className="container mx-auto px-4 py-8">
@@ -46,25 +24,25 @@ export default async function ListingsPage() {
                         </tr>
                     </thead>
                     <tbody className="bg-white divide-y divide-gray-200">
-                        {listings.map((listing) => (
-                            <tr key={listing.id}>
+                        {listings.map(item => (
+                            <tr key={item.id}>
                                 <td className="px-3 py-3 whitespace-nowrap">
-                                    <img src={listing.cleaned.main_image} alt={listing.cleaned.title} className="h-12 w-12 object-cover rounded" />
+                                    <img src={item.cleaned.main_image} alt={item.cleaned.title} className="h-12 w-12 object-cover rounded" />
                                 </td>
-                                <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900">{listing.cleaned.asin}</td>
-                                <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900 max-w-xs truncate">{listing.cleaned.title}</td>
-                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{listing.cleaned.price}</td>
-                                <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900 max-w-xs truncate">{listing.cleaned.category}</td>
+                                <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900">{item.cleaned.asin}</td>
+                                <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900 max-w-xs truncate">{item.cleaned.title}</td>
+                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{item.cleaned.price}</td>
+                                <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900 max-w-xs truncate">{item.cleaned.category}</td>
                                 <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900">
-                                    {listing.cleaned.item_length}x{listing.cleaned.item_width}x{listing.cleaned.item_height}, {listing.cleaned.item_weight}
+                                    {item.cleaned.item_length}x{item.cleaned.item_width}x{item.cleaned.item_height}, {item.cleaned.item_weight}
                                 </td>
                                 <td className="px-4 py-4 whitespace-nowrap text-sm font-medium space-x-2">
-                                    <Link href={`/dashboard/listings/${listing.id}`} className="text-indigo-600 hover:text-indigo-900">
+                                    <Link href={`/dashboard/listings/${item.id}`} className="text-blue-600 hover:text-indigo-900">
                                         详情
                                     </Link>
                                     {/* 编辑和删除按钮可后续添加功能 */}
-                                    <button className="text-yellow-600 hover:text-yellow-900 ml-2">编辑</button>
-                                    <button className="text-red-600 hover:text-red-900 ml-2">删除</button>
+                                    <button className="text-blue-600 hover:text-yellow-900 ml-2">编辑</button>
+                                    <button className="text-blue-600 hover:text-red-900 ml-2">删除</button>
                                 </td>
                             </tr>
                         ))}

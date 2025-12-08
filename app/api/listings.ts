@@ -1,6 +1,6 @@
 // app/api/listing.ts
-import { supabase } from '../lib/supabase'
-import type { Database } from '../lib/supabase-types'
+import { supabase } from '@/app/lib/supabase'
+import type { Database } from '@/app/lib/supabase-types'
 
 // 定义从 Supabase 生成类型中提取出的 Listing 类型
 type Listing = Database['public']['Tables']['listings']['Row']

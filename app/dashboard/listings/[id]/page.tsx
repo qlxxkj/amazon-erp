@@ -1,67 +1,61 @@
-// app/dashboard/listings/[id]/page.tsx
-import Link from 'next/link'
-import { notFound } from 'next/navigation';
-import ImageGallery from '../../../ui/listings/ImageGallery';
-import EditableOptimizedFields from '../../../ui/listings/EditableOptimizedFields';
-import ActionButtons from '../../../ui/listings/ActionButtons';
-import { listingService } from '../../../api/listings'; // 您的数据服务
-import ImageGalleryWithActions from '@/app/components/ImageGalleryWithActions';
+import { notFound } from 'next/navigation'
+import { listingService } from '@/app/api/listings/service'
+import EditableOptimizedFields from '@/app/ui/listings/EditableOptimizedFields'
+import ActionButtons from '@/app/ui/listings/ActionButtons'
+import ImageGalleryWithActions from '@/app/components/ImageGalleryWithActions'
 
 interface PageProps {
-    params: Promise<{ id: string }>;
+    params: { id: string }
 }
 
 export default async function ListingDetailPage({ params }: PageProps) {
-    // 1. 解析动态路由参数
-    const { id } = await params;
-    const listingId = parseInt(id);
+    const {id} = await params;
+    const listingId = Number(id)
 
-
-    // 2. 根据 ID 获取数据
-    let listing;
-    try {
-        listing = await listingService.getListingById(listingId);
-    } catch (error) {
-        console.error(`Failed to fetch listing ${listingId}:`, error);
-        notFound(); // 如果未找到数据，显示 404 页面
+    if (isNaN(listingId)) {
+        return notFound()
     }
 
-    // 3. 安全地访问嵌套的 JSONB 字段
-    const cleanedData = listing?.cleaned;
-    const optimizedData = listing?.optimized || {};
+    // ✨ Server 直接请求（由 Supabase RLS 控制权限）
+    const listing = await listingService.getListingById(listingId).catch(() => null)
 
-    if (!cleanedData) {
-        return <div>Error: Listing data structure is invalid.</div>;
+    if (!listing) return notFound()
+
+    const cleaned = listing.cleaned
+    const optimized = listing.optimized || {}
+
+    if (!cleaned) {
+        return <div>Invalid listing data.</div>
     }
 
-    // 准备图片数据
-    const images = [cleanedData.main_image, ...(cleanedData.other_images || [])].filter(Boolean);
+    const images = [
+        cleaned.main_image,
+        ...(cleaned.other_images ?? [])
+    ].filter(Boolean)
 
     return (
         <div className="container mx-auto px-4 py-8 space-y-8">
-            {/* 上部：图片橱窗 */}
+            {/* 图片 + 操作 */}
             <section>
-                {/* <h2 className="text-2xl font-bold mb-4">图片</h2>
-                <ImageGallery images={images} /> */}
                 <ImageGalleryWithActions
-                    initialImages={images}
                     listingId={listing.id}
+                    initialImages={images}
                 />
             </section>
 
-            {/* 中部：可编辑的优化信息 */}
+            {/* 可编辑的优化项 */}
             <section>
                 <h2 className="text-2xl font-bold mb-4">优化信息</h2>
                 <EditableOptimizedFields
                     listingId={listingId}
-                    initialData={optimizedData}
+                    initialData={optimized}
                 />
             </section>
 
-            {/* 下部：操作按钮 */}
+            {/* 底部操作 */}
             <section className="flex justify-between pt-4 border-t">
-                <ActionButtons currentId={listingId} />
+                <ActionButtons listingId={listingId} />
             </section>
         </div>
-    );
+    )
 }
